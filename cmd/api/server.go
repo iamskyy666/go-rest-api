@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -161,17 +162,33 @@ func ExecsHandler(w http.ResponseWriter, r *http.Request){
 
 func main() {
 	PORT := ":3000"
+	cert:= "cert.pem"
+	key:="key.pem"
 
-	http.HandleFunc("/", RootHandler )
+	mux:= http.NewServeMux()
 
-	http.HandleFunc("/teachers/", TeachersHandler)
 
-	http.HandleFunc("/students", StudentsHandler)
+	mux.HandleFunc("/", RootHandler )
 
-	http.HandleFunc("/execs", ExecsHandler)
+	mux.HandleFunc("/teachers/", TeachersHandler)
+
+	mux.HandleFunc("/students", StudentsHandler)
+
+	mux.HandleFunc("/execs", ExecsHandler)
+
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
+
+	// Create custom-server
+	server:= &http.Server{
+		Addr:PORT,
+		Handler: mux,
+		TLSConfig: tlsConfig,
+	}
 
 	fmt.Println("Server is running on PORT", PORT,"🟢")
-	err:= http.ListenAndServe(PORT,nil)
+	err:= server.ListenAndServeTLS(cert,key)
 	if err!=nil{
 		log.Fatal("⚠️ERROR. starting the server:",err)
 	}
