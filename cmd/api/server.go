@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"github.com/iamskyy111/go-rest-api/internal/api/middlewares"
 )
 
 // For multiple usecases, use structs (MODELs) instead of simple-maps
@@ -124,10 +125,7 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request){
 			fmt.Println("PORT:",r.URL.Port())
 			fmt.Println("Scheme:",r.URL.Scheme)
 
-						
-			
-
-			
+							
 			w.Write([]byte("Hello Post method on Teachers-Route ✅"))
 			fmt.Println("Hello Post method on Teachers-Route ✅")
 			return
@@ -167,13 +165,9 @@ func main() {
 
 	mux:= http.NewServeMux()
 
-
 	mux.HandleFunc("/", RootHandler )
-
 	mux.HandleFunc("/teachers/", TeachersHandler)
-
 	mux.HandleFunc("/students", StudentsHandler)
-
 	mux.HandleFunc("/execs", ExecsHandler)
 
 	tlsConfig := &tls.Config{
@@ -183,7 +177,7 @@ func main() {
 	// Create custom-server
 	server:= &http.Server{
 		Addr:PORT,
-		Handler: mux,
+		Handler: middlewares.SecurityHeaders(mux),
 		TLSConfig: tlsConfig,
 	}
 
