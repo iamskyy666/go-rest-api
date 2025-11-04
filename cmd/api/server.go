@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+
 	"github.com/iamskyy111/go-rest-api/internal/api/middlewares"
 )
 
@@ -177,7 +178,8 @@ func main() {
 	// Create custom-server
 	server:= &http.Server{
 		Addr:PORT,
-		Handler: middlewares.SecurityHeaders(mux),
+		Handler: middlewares.SecurityHeaders(middlewares.CorsMiddleware(mux)),
+		//Handler: middlewares.CorsMiddleware(mux),
 		TLSConfig: tlsConfig,
 	}
 
