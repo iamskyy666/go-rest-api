@@ -2,24 +2,13 @@ package main
 
 import (
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/iamskyy111/go-rest-api/internal/api/middlewares"
 )
-
-// For multiple usecases, use structs (MODELs) instead of simple-maps
-type Country struct{
-	Name string `json:"country"`
-	Capital string `json:"capital"`
-	Language string `json:"language"`
-	ISD_CODE string `json:"isd-code"`
-}
 
 func RootHandler(w http.ResponseWriter, r *http.Request){
 		//fmt.Fprintf(w, "Hello Root-Route ✅")
@@ -32,102 +21,10 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request){
 
 		switch r.Method {
 				case http.MethodGet:
-			//💡 teachers/{id} - Path Params
-			//💡 teachers/?key=value&query=value2&sortby=email&sortorder=ASC - Query Params
-			fmt.Println("PATH:",r.URL.Path)	//💡 PATH-PARAMS	
-			path:=strings.TrimPrefix(r.URL.Path,"/teachers/")
-			userID:=strings.TrimSuffix(path,"/")
-
-			fmt.Println("ID is:",userID) // ID is: 123
-			fmt.Println("Query Param(s):",r.URL.Query()) // Query Param(s): map[key:[value] query:[value2] sortby:[email] sortorder:[ASC]]
-			qryParams:=r.URL.Query()
-			sortby:= qryParams.Get("sortby")
-			key:= qryParams.Get("key")
-			sortorder:= qryParams.Get("sortorder")
-
-			if sortorder == ""{
-				sortorder = "DESC"
-			}
-
-			fmt.Printf("Sortby: %v, Sort-Order: %v, Key: %v\n", sortby,sortorder,key) // Sortby: email, Sort-Order: ASC, Key: value
-
-
 			w.Write([]byte("Hello GET method on Teachers-Route ✅"))
 			fmt.Println("Hello GET method on Teachers-Route ✅")
 			return
-				case http.MethodPost:
-			//💡 Parse form data (necessary for x-www-form-urlencoded)
-			
-			err:=r.ParseForm()
-			if err!=nil{
-				http.Error(w,"ERROR parsing form!",http.StatusBadRequest)
-				return
-			}
-
-			fmt.Println("FORM:",r.Form)
-
-			// Prepare the response-data
-			resp:= make(map[string]any)
-			for k,v:= range r.Form{
-				resp[k]=v[0]
-			}
-			fmt.Println("Processed Response Map:",resp)
-
-
-			//💡 RAW Body { }
-			body,err:=io.ReadAll(r.Body)
-			if err!=nil{
-				return
-			}
-			r.Body.Close() //⚠️ remember to close the body, bcz, field Body io.ReadCloser!
-			// fmt.Println("RAW Body:",body)
-			
-
-			fmt.Println("Processed Body:", string(body))
-
-			// 💡 UNMARSHAL RAW-Body in JSON format:
-			var Lëtzebuerg Country
-			err=json.Unmarshal(body, &Lëtzebuerg)
-			if err!=nil{
-				return
-			}
-			fmt.Println("Lëtzebuerg:",Lëtzebuerg) // Lëtzebuerg: {Luxembourg Luxembourg-City Lëtzebuergesch +352}
-			fmt.Println("Capital City:", Lëtzebuerg.Capital) // Capital City: Luxembourg-City
-
-			// Prepare the response-data 2
-			resp2:= make(map[string]any)
-			for k,v:= range r.Form{
-				resp[k]=v[0]  
-			}
-
-			err=json.Unmarshal(body, &resp2)
-			if err!=nil{
-				return
-			}
-
-			fmt.Println("Unmarshalled json into a map:",resp2)
-
-			// 💡 Access req. details
-			fmt.Println("********** ACCESS REQ. DETAILS **********")
-			fmt.Println("Body:",r.Body)
-			fmt.Println("Form:",r.Form)
-			fmt.Println("Header:",r.Header)
-			fmt.Println("Context:",r.Context())
-			fmt.Println("Content-length:",r.ContentLength)
-			fmt.Println("Host:",r.Host)
-			fmt.Println("Method:",r.Method)
-			fmt.Println("Protocol:",r.Proto)
-			fmt.Println("Remote-Addr:",r.RemoteAddr)
-			fmt.Println("Req-URI:",r.RequestURI)
-			fmt.Println("TLS:",r.TLS)
-			fmt.Println("Trailer:",r.Trailer)
-			fmt.Println("Transfer-Encoding:",r.TransferEncoding)
-			fmt.Println("URL:",r.URL)
-			fmt.Println("User-Agent:",r.UserAgent())
-			fmt.Println("PORT:",r.URL.Port())
-			fmt.Println("Scheme:",r.URL.Scheme)
-
-							
+				case http.MethodPost:							
 			w.Write([]byte("Hello Post method on Teachers-Route ✅"))
 			fmt.Println("Hello Post method on Teachers-Route ✅")
 			return
@@ -149,13 +46,11 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request){
 	}	
 
 func StudentsHandler(w http.ResponseWriter, r *http.Request){
-		//fmt.Fprintf(w, "Hello Students-Route ✅")
 		w.Write([]byte("Hello Students-Route ✅"))
 		fmt.Println("Students Route ✅", r.Method)
 	}	
 
 func ExecsHandler(w http.ResponseWriter, r *http.Request){
-		//fmt.Fprintf(w, "Hello Execs-Route ✅")
 		w.Write([]byte("Hello Execs-Route ✅"))
 		fmt.Println("Execs Route ✅", r.Method)
 	}
@@ -179,10 +74,20 @@ func main() {
 	// initialize the rate-limiter
 	rl:= middlewares.NewRateLimiter(5, time.Minute)
 
+	// instance of the HppOptions struct
+	hppOptions:= middlewares.HPPOptions{
+		CheckQuery: true,
+		CheckBody: true,
+		CheckBodyOnlyForContentType: "application/x-www-form-urlencoded",
+		WhiteList: []string{"sortBy","sortOrder","name","age","class"},
+	}
+
+
+
 	// Create custom-server
 	server:= &http.Server{
 		Addr:PORT,
-		Handler: rl.RateLimiterMiddleware(middlewares.CompressionMiddleware(middlewares.ResponseTimeMiddleware(middlewares.SecurityHeaders(middlewares.CorsMiddleware(mux))))),
+		Handler: middlewares.HppMiddleware(hppOptions)(rl.RateLimiterMiddleware(middlewares.CompressionMiddleware(middlewares.ResponseTimeMiddleware(middlewares.SecurityHeaders(middlewares.CorsMiddleware(mux)))))),
 		TLSConfig: tlsConfig,
 	}
 
