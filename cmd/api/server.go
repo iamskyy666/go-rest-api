@@ -79,7 +79,7 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request){
 				return
 			}
 			r.Body.Close() //⚠️ remember to close the body, bcz, field Body io.ReadCloser!
-			fmt.Println("RAW Body:",body)
+			// fmt.Println("RAW Body:",body)
 			
 
 			fmt.Println("Processed Body:", string(body))
@@ -178,8 +178,7 @@ func main() {
 	// Create custom-server
 	server:= &http.Server{
 		Addr:PORT,
-		Handler: middlewares.SecurityHeaders(middlewares.CorsMiddleware(mux)),
-		//Handler: middlewares.CorsMiddleware(mux),
+		Handler: middlewares.ResponseTimeMiddleware(middlewares.SecurityHeaders(middlewares.CorsMiddleware(mux))),
 		TLSConfig: tlsConfig,
 	}
 
