@@ -41,7 +41,7 @@ func (rl *rateLimiter) RateLimiterMiddleware(next http.Handler)http.Handler{
 		defer rl.mu.Unlock()
 		visitorIP:=r.RemoteAddr // minimal and simple for now.
 		rl.visitors[visitorIP]++
-		fmt.Printf("🔵 Visitor Count from %v is %v\n",visitorIP,rl.visitors[visitorIP])
+		fmt.Printf("⚠️ Visitor Count from %v is %v\n",visitorIP,rl.visitors[visitorIP])
 
 		if rl.visitors[visitorIP] > rl.limit{
 			http.Error(w, "Too Many Requests ⚠️",http.StatusTooManyRequests)
