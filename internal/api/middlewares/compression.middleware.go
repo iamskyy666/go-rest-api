@@ -1,0 +1,40 @@
+package middlewares
+
+import (
+	"compress/gzip"
+	"fmt"
+	"net/http"
+	"strings"
+)
+
+// Makes difference on bigger payloads - Negligible on small data/payload (Static pages, small images etc.)
+// CPU Overhead - Use only when needed
+
+func CompressionMiddleware(next http.Handler) http.Handler{
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check if the client accepts 'gzip' encoding
+		if !strings.Contains(r.Header.Get("Accept-Encoding"),"gzip"){
+			next.ServeHTTP(w,r) // move to thex next mw()
+		}
+
+		// Set the resp. header
+		w.Header().Set("Content-Encoding","gzip")
+		gz:=gzip.NewWriter(w)
+		defer gz.Close()
+
+		// Wrap the ResponseWriter
+		w = &gzipResponseWriter{ResponseWriter: w, writer: gz}
+
+		next.ServeHTTP(w,r)
+		fmt.Println("Sent resp. from Compression Middleware() ☑️")
+	})
+}
+// gzipResponseWriter wraps http.ResponseWriter to write gzipped responses
+type gzipResponseWriter struct{
+	http.ResponseWriter
+	writer *gzip.Writer
+}
+
+func (g *gzipResponseWriter)Write(b []byte)(int,error){
+	return  g.writer.Write(b)
+}

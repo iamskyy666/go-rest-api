@@ -178,7 +178,7 @@ func main() {
 	// Create custom-server
 	server:= &http.Server{
 		Addr:PORT,
-		Handler: middlewares.ResponseTimeMiddleware(middlewares.SecurityHeaders(middlewares.CorsMiddleware(mux))),
+		Handler: middlewares.CompressionMiddleware(middlewares.ResponseTimeMiddleware(middlewares.SecurityHeaders(middlewares.CorsMiddleware(mux)))),
 		TLSConfig: tlsConfig,
 	}
 
