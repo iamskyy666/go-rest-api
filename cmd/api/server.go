@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/iamskyy111/go-rest-api/internal/api/middlewares"
 )
@@ -175,10 +176,13 @@ func main() {
 		MinVersion: tls.VersionTLS12,
 	}
 
+	// initialize the rate-limiter
+	rl:= middlewares.NewRateLimiter(5, time.Minute)
+
 	// Create custom-server
 	server:= &http.Server{
 		Addr:PORT,
-		Handler: middlewares.CompressionMiddleware(middlewares.ResponseTimeMiddleware(middlewares.SecurityHeaders(middlewares.CorsMiddleware(mux)))),
+		Handler: rl.RateLimiterMiddleware(middlewares.CompressionMiddleware(middlewares.ResponseTimeMiddleware(middlewares.SecurityHeaders(middlewares.CorsMiddleware(mux))))),
 		TLSConfig: tlsConfig,
 	}
 
