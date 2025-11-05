@@ -82,12 +82,15 @@ func main() {
 		WhiteList: []string{"sortBy","sortOrder","name","age","class"},
 	}
 
+	// Efficient Middleware Ordering/Chaining ✅
+	secureMux:= middlewares.CorsMiddleware(rl.RateLimiterMiddleware(middlewares.ResponseTimeMiddleware(middlewares.SecurityHeaders(middlewares.CompressionMiddleware(middlewares.HppMiddleware(hppOptions)(mux))))))
+
 
 
 	// Create custom-server
 	server:= &http.Server{
 		Addr:PORT,
-		Handler: middlewares.HppMiddleware(hppOptions)(rl.RateLimiterMiddleware(middlewares.CompressionMiddleware(middlewares.ResponseTimeMiddleware(middlewares.SecurityHeaders(middlewares.CorsMiddleware(mux)))))),
+		Handler: secureMux,
 		TLSConfig: tlsConfig,
 	}
 
