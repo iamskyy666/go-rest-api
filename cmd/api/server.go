@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/iamskyy111/go-rest-api/internal/api/middlewares"
 )
@@ -71,19 +70,23 @@ func main() {
 		MinVersion: tls.VersionTLS12,
 	}
 
-	// initialize the rate-limiter
-	rl:= middlewares.NewRateLimiter(5, time.Minute)
+	// initialize the rate-limiter ✅
+	//rl:= middlewares.NewRateLimiter(5, time.Minute)
 
-	// instance of the HppOptions struct
-	hppOptions:= middlewares.HPPOptions{
-		CheckQuery: true,
-		CheckBody: true,
-		CheckBodyOnlyForContentType: "application/x-www-form-urlencoded",
-		WhiteList: []string{"sortBy","sortOrder","name","age","class"},
-	}
+	// instance of the HppOptions struct ✅
+	// hppOptions:= middlewares.HPPOptions{
+	// 	CheckQuery: true,
+	// 	CheckBody: true,
+	// 	CheckBodyOnlyForContentType: "application/x-www-form-urlencoded",
+	// 	WhiteList: []string{"sortBy","sortOrder","name","age","class"},
+	// }
+
+	// secureMux:= middlewares.CorsMiddleware(rl.RateLimiterMiddleware(middlewares.ResponseTimeMiddleware(middlewares.SecurityHeaders(middlewares.CompressionMiddleware(middlewares.HppMiddleware(hppOptions)(mux))))))
 
 	// Efficient Middleware Ordering/Chaining ✅
-	secureMux:= middlewares.CorsMiddleware(rl.RateLimiterMiddleware(middlewares.ResponseTimeMiddleware(middlewares.SecurityHeaders(middlewares.CompressionMiddleware(middlewares.HppMiddleware(hppOptions)(mux))))))
+	// secureMux:= applyMiddlewares(mux, middlewares.HppMiddleware(hppOptions), middlewares.CompressionMiddleware, middlewares.CompressionMiddleware, middlewares.SecurityHeaders, middlewares.ResponseTimeMiddleware, rl.RateLimiterMiddleware,middlewares.CorsMiddleware)
+
+	secureMux:= middlewares.SecurityHeaders(mux)
 
 
 
@@ -99,4 +102,15 @@ func main() {
 	if err!=nil{
 		log.Fatal("⚠️ERROR. starting the server:",err)
 	}
+}
+
+// Efficient Middleware Chaining 💡
+// Middleware is a function that wraps http.handler with additional functionalities
+
+type Middleware func(http.Handler)http.Handler
+func ApplyMiddlewares(handler http.Handler, middlewares ...Middleware) http.Handler{
+	for _,mw:= range middlewares{
+		handler = mw(handler)
+	}
+	return handler
 }
