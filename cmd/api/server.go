@@ -15,11 +15,11 @@ import (
 
 // 💡 models
 type Teacher struct{
-	ID int
-	FirstName string
-	LastName string
-	Class string
-	Subject string
+	ID int `json:"id,omitempty"`
+	FirstName string `json:"first_name,omitempty"`
+	LastName string `json:"last_name,omitempty"`
+	Class string `json:"class,omitempty"`
+	Subject string `json:"subject,omitempty"`
 }
 
 var teachers = make(map[int]Teacher)
@@ -28,7 +28,7 @@ var nextID = 1
 
 // Initialize some data
 func init(){
-	teachers[nextID] = Teacher{
+		teachers[nextID] = Teacher{
 		ID: nextID,
 		FirstName: "John",
 		LastName: "Doe",
@@ -36,8 +36,8 @@ func init(){
 		Subject: "Math",
 	}
 	nextID++
-	teachers[nextID] = Teacher{
-			ID: nextID,
+		teachers[nextID] = Teacher{
+		ID: nextID,
 		FirstName: "Jane",
 		LastName: "Smith",
 		Class: "10A",
@@ -51,6 +51,7 @@ func init(){
 		Class: "11A",
 		Subject: "Geography",
 	}
+	nextID++
 }
 
 // Initially, in-memory handler functions.
@@ -65,7 +66,7 @@ func GetTeachersHandler(w http.ResponseWriter, r *http.Request){
 
 	if idStr==""{
 	firstName:= r.URL.Query().Get("first_name")
-	lastName:= r.URL.Query().Get("lst_name")
+	lastName:= r.URL.Query().Get("last_name")
 	teacherList:= make([]Teacher,0,len(teachers))
 	for _, teacher:= range teachers{
 		if (firstName == "" || teacher.FirstName == firstName) && (lastName == "" || teacher.LastName == lastName){
@@ -102,6 +103,40 @@ func GetTeachersHandler(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(teacher)
 }
 
+// ☑️ ADD Teacher(s)
+func AddTeacherHandler(w http.ResponseWriter, r *http.Request){
+	// Use mutex when adding a new teacher / POST
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	var newTeachers []Teacher
+	err:=json.NewDecoder(r.Body).Decode(&newTeachers) // we can add 1 or multiple values in a list
+	if err != nil {
+		http.Error(w,"Invalid Request Body!",http.StatusBadRequest)
+		return
+	}
+
+	addedTeachers:=make([]Teacher,len(newTeachers))
+	for i, newTeacher:= range newTeachers{
+		newTeacher.ID = nextID
+		teachers[nextID] = newTeacher
+		addedTeachers[i] = newTeacher
+		nextID++
+	}
+	w.Header().Set("Content-Type","application/json")
+	w.WriteHeader(http.StatusCreated)
+	resp:= struct{
+		Status string `json:"status"`
+		Count int `json:"count"`
+		Data []Teacher `json:"data"`
+	}{
+		Status: "success",
+		Count: len(addedTeachers),
+		Data: addedTeachers,
+	}
+	json.NewEncoder(w).Encode(resp)
+}
+
 func RootHandler(w http.ResponseWriter, r *http.Request){
 	switch r.Method {
 				case http.MethodGet:
@@ -133,8 +168,7 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request){
 		GetTeachersHandler(w,r)	
 			return
 				case http.MethodPost:							
-			w.Write([]byte("Hello Post method on Teachers-Route ✅"))
-			fmt.Println("Hello Post method on Teachers-Route ✅")
+			AddTeacherHandler(w,r)
 			return
 				case http.MethodPatch:
 			w.Write([]byte("Hello Patch method on Teachers-Route ✅"))
@@ -217,22 +251,6 @@ func main() {
 		MinVersion: tls.VersionTLS12,
 	}
 
-	// initialize the rate-limiter ✅
-	//rl:= middlewares.NewRateLimiter(5, time.Minute)
-
-	// instance of the HppOptions struct ✅
-	// hppOptions:= middlewares.HPPOptions{
-	// 	CheckQuery: true,
-	// 	CheckBody: true,
-	// 	CheckBodyOnlyForContentType: "application/x-www-form-urlencoded",
-	// 	WhiteList: []string{"sortBy","sortOrder","name","age","class"},
-	// }
-
-	// secureMux:= middlewares.CorsMiddleware(rl.RateLimiterMiddleware(middlewares.ResponseTimeMiddleware(middlewares.SecurityHeaders(middlewares.CompressionMiddleware(middlewares.HppMiddleware(hppOptions)(mux))))))
-
-	// Efficient Middleware Ordering/Chaining ✅
-	// secureMux:= applyMiddlewares(mux, middlewares.HppMiddleware(hppOptions), middlewares.CompressionMiddleware, middlewares.CompressionMiddleware, middlewares.SecurityHeaders, middlewares.ResponseTimeMiddleware, rl.RateLimiterMiddleware,middlewares.CorsMiddleware)
-
 	secureMux:= middlewares.SecurityHeaders(mux)
 
 
@@ -250,9 +268,6 @@ func main() {
 		log.Fatal("⚠️ERROR. starting the server:",err)
 	}
 }
-
-// Efficient Middleware Chaining 💡
-// Middleware is a function that wraps http.handler with additional functionalities
 
 type Middleware func(http.Handler)http.Handler
 func ApplyMiddlewares(handler http.Handler, middlewares ...Middleware) http.Handler{
