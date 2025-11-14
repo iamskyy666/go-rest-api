@@ -6,6 +6,7 @@ import (
 	"slices"
 )
 
+// FOR EXAMPLE:
 // Api is hosted at www.myapi.com
 // fontend server is at www.myfrontend.com
 
