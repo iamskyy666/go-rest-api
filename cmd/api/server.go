@@ -5,22 +5,32 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/iamskyy111/go-rest-api/internal/api/middlewares"
 	"github.com/iamskyy111/go-rest-api/internal/api/router"
 	"github.com/iamskyy111/go-rest-api/internal/repositories/sqlconnect"
+	"github.com/joho/godotenv"
 )
 
 
 func main() {
+	// godotenv loads the .env file vars as if they're part of the system OS.
+	// mentioning it in the main() is enough
+	err:=godotenv.Load()
+	if err != nil {
+		fmt.Println("⚠️Error loading .env files:",err)
+		return
+	}
+
 	// DB connection
-	_,err:=sqlconnect.ConnectDB("dbeaver_testdb")
+	_,err=sqlconnect.ConnectDB()
 	if err != nil {
 		fmt.Println("ERROR:",err)
 	}
 
 
-	PORT := ":3000"
+	PORT := os.Getenv("API_PORT")
 	cert:= "cert.pem"
 	key:="key.pem"
 
@@ -39,7 +49,6 @@ func main() {
 		Handler: secureMux,
 		TLSConfig: tlsConfig,
 	}
-
 	fmt.Println("Server is running on PORT", PORT,"🟢")
 	err= server.ListenAndServeTLS(cert,key)
 	if err!=nil{
