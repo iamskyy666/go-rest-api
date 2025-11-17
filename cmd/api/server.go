@@ -8,10 +8,18 @@ import (
 
 	"github.com/iamskyy111/go-rest-api/internal/api/middlewares"
 	"github.com/iamskyy111/go-rest-api/internal/api/router"
+	"github.com/iamskyy111/go-rest-api/internal/repositories/sqlconnect"
 )
 
 
 func main() {
+	// DB connection
+	_,err:=sqlconnect.ConnectDB("dbeaver_testdb")
+	if err != nil {
+		fmt.Println("ERROR:",err)
+	}
+
+
 	PORT := ":3000"
 	cert:= "cert.pem"
 	key:="key.pem"
@@ -33,7 +41,7 @@ func main() {
 	}
 
 	fmt.Println("Server is running on PORT", PORT,"🟢")
-	err:= server.ListenAndServeTLS(cert,key)
+	err= server.ListenAndServeTLS(cert,key)
 	if err!=nil{
 		log.Fatal("⚠️ERROR. starting the server:",err)
 	}
