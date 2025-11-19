@@ -1,0 +1,402 @@
+[
+    {
+        "id": 100,
+        "first_name": "Bob",
+        "last_name": "White",
+        "email": "bob@test.com",
+        "class": "9B",
+        "subject": "Quantum Mechanics"
+    },
+    {
+        "id": 101,
+        "first_name": "Bruce",
+        "last_name": "Wayne",
+        "email": "bruce@test.com",
+        "class": "8C",
+        "subject": "Cloud Computing"
+    },
+    {
+        "id": 102,
+        "first_name": "Clark",
+        "last_name": "Kent",
+        "email": "clark@test.com",
+        "class": "11C",
+        "subject": "Backend Dev."
+    },
+    {
+        "id": 103,
+        "first_name": "Stephen",
+        "last_name": "Allen",
+        "email": "stephen.allen@test.com",
+        "class": "9B",
+        "subject": "Computer Science"
+    },
+    {
+        "id": 104,
+        "first_name": "Miles",
+        "last_name": "Lane",
+        "email": "miles.lane@test.com",
+        "class": "7B",
+        "subject": "Environmental Science"
+    },
+    {
+        "id": 105,
+        "first_name": "Steve",
+        "last_name": "Pym",
+        "email": "steve.pym@test.com",
+        "class": "7A",
+        "subject": "Civics"
+    },
+    {
+        "id": 106,
+        "first_name": "Harvey",
+        "last_name": "Kyle",
+        "email": "harvey.kyle@test.com",
+        "class": "7A",
+        "subject": "Algorithms"
+    },
+    {
+        "id": 107,
+        "first_name": "Selina",
+        "last_name": "Fox",
+        "email": "selina.fox@test.com",
+        "class": "12A",
+        "subject": "Data Structures"
+    },
+    {
+        "id": 108,
+        "first_name": "Phil",
+        "last_name": "Gordon",
+        "email": "phil.gordon@test.com",
+        "class": "6A",
+        "subject": "Geography"
+    },
+    {
+        "id": 109,
+        "first_name": "Peter",
+        "last_name": "Maximoff",
+        "email": "peter.maximoff@test.com",
+        "class": "6A",
+        "subject": "DevOps"
+    },
+    {
+        "id": 110,
+        "first_name": "Miles",
+        "last_name": "Prince",
+        "email": "miles.prince@test.com",
+        "class": "6A",
+        "subject": "Data Structures"
+    },
+    {
+        "id": 111,
+        "first_name": "John",
+        "last_name": "Rider",
+        "email": "john.rider@test.com",
+        "class": "6A",
+        "subject": "Operating Systems"
+    },
+    {
+        "id": 112,
+        "first_name": "John",
+        "last_name": "Dent",
+        "email": "john.dent@test.com",
+        "class": "7B",
+        "subject": "English Literature"
+    },
+    {
+        "id": 113,
+        "first_name": "Pepper",
+        "last_name": "Crane",
+        "email": "pepper.crane@test.com",
+        "class": "7A",
+        "subject": "Electronics"
+    },
+    {
+        "id": 114,
+        "first_name": "Selina",
+        "last_name": "Crane",
+        "email": "selina.crane@test.com",
+        "class": "9A",
+        "subject": "AI & ML"
+    },
+    {
+        "id": 115,
+        "first_name": "Stephen",
+        "last_name": "Curry",
+        "email": "stephen.curry@test.com",
+        "class": "9A",
+        "subject": "Maths"
+    },
+    {
+        "id": 116,
+        "first_name": "Harvey",
+        "last_name": "Nygma",
+        "email": "harvey.nygma@test.com",
+        "class": "11C",
+        "subject": "Cyber Security"
+    },
+    {
+        "id": 117,
+        "first_name": "Diana",
+        "last_name": "Castle",
+        "email": "diana.castle@test.com",
+        "class": "12B",
+        "subject": "Networks"
+    },
+    {
+        "id": 118,
+        "first_name": "Gwen",
+        "last_name": "Lance",
+        "email": "gwen.lance@test.com",
+        "class": "8C",
+        "subject": "Operating Systems"
+    },
+    {
+        "id": 119,
+        "first_name": "Matt",
+        "last_name": "Pym",
+        "email": "matt.pym@test.com",
+        "class": "6A",
+        "subject": "Computer Science"
+    },
+    {
+        "id": 120,
+        "first_name": "Hank",
+        "last_name": "Cobblepot",
+        "email": "hank.cobblepot@test.com",
+        "class": "7A",
+        "subject": "Computer Science"
+    },
+    {
+        "id": 121,
+        "first_name": "Vision",
+        "last_name": "Stark",
+        "email": "vision.stark@test.com",
+        "class": "10B",
+        "subject": "Maths"
+    },
+    {
+        "id": 122,
+        "first_name": "Jonathan",
+        "last_name": "Allen",
+        "email": "jonathan.allen@test.com",
+        "class": "6A",
+        "subject": "Physics"
+    },
+    {
+        "id": 123,
+        "first_name": "Pepper",
+        "last_name": "Nelson",
+        "email": "pepper.nelson@test.com",
+        "class": "10B",
+        "subject": "Civics"
+    },
+    {
+        "id": 124,
+        "first_name": "Alice",
+        "last_name": "Fury",
+        "email": "alice.fury@test.com",
+        "class": "8A",
+        "subject": "Environmental Science"
+    },
+    {
+        "id": 125,
+        "first_name": "Jonathan",
+        "last_name": "Jones",
+        "email": "jonathan.jones@test.com",
+        "class": "12B",
+        "subject": "Chemistry"
+    },
+    {
+        "id": 126,
+        "first_name": "Diana",
+        "last_name": "Maximoff",
+        "email": "diana.maximoff@test.com",
+        "class": "11A",
+        "subject": "Networks"
+    },
+    {
+        "id": 127,
+        "first_name": "Rachel",
+        "last_name": "Drake",
+        "email": "rachel.drake@test.com",
+        "class": "8C",
+        "subject": "DevOps"
+    },
+    {
+        "id": 128,
+        "first_name": "Jonathan",
+        "last_name": "Danvers",
+        "email": "jonathan.danvers@test.com",
+        "class": "11A",
+        "subject": "History"
+    },
+    {
+        "id": 129,
+        "first_name": "Jonathan",
+        "last_name": "Romanoff",
+        "email": "jonathan.romanoff@test.com",
+        "class": "6A",
+        "subject": "Networks"
+    },
+    {
+        "id": 130,
+        "first_name": "Lex",
+        "last_name": "Lance",
+        "email": "lex.lance@test.com",
+        "class": "11A",
+        "subject": "Computer Science"
+    },
+    {
+        "id": 131,
+        "first_name": "Zoe",
+        "last_name": "Curry",
+        "email": "zoe.curry@test.com",
+        "class": "9B",
+        "subject": "Operating Systems"
+    },
+    {
+        "id": 132,
+        "first_name": "Edward",
+        "last_name": "Queen",
+        "email": "edward.queen@test.com",
+        "class": "9A",
+        "subject": "Networks"
+    },
+    {
+        "id": 133,
+        "first_name": "Alice",
+        "last_name": "Kyle",
+        "email": "alice.kyle@test.com",
+        "class": "6A",
+        "subject": "Mobile App Dev"
+    },
+    {
+        "id": 134,
+        "first_name": "Oswald",
+        "last_name": "Nygma",
+        "email": "oswald.nygma@test.com",
+        "class": "6B",
+        "subject": "History"
+    },
+    {
+        "id": 135,
+        "first_name": "Hope",
+        "last_name": "Gordon",
+        "email": "hope.gordon@test.com",
+        "class": "11C",
+        "subject": "Cyber Security"
+    },
+    {
+        "id": 136,
+        "first_name": "Linda",
+        "last_name": "Kent",
+        "email": "linda.kent@test.com",
+        "class": "9B",
+        "subject": "Data Structures"
+    },
+    {
+        "id": 137,
+        "first_name": "Vision",
+        "last_name": "Romanoff",
+        "email": "vision.romanoff@test.com",
+        "class": "8B",
+        "subject": "Environmental Science"
+    },
+    {
+        "id": 138,
+        "first_name": "Ivy",
+        "last_name": "Lang",
+        "email": "ivy.lang@test.com",
+        "class": "11B",
+        "subject": "Algorithms"
+    },
+    {
+        "id": 139,
+        "first_name": "Tony",
+        "last_name": "Lang",
+        "email": "tony.lang@test.com",
+        "class": "11C",
+        "subject": "Cyber Security"
+    },
+    {
+        "id": 140,
+        "first_name": "Peter",
+        "last_name": "Stark",
+        "email": "peter.stark@test.com",
+        "class": "8B",
+        "subject": "Civics"
+    },
+    {
+        "id": 141,
+        "first_name": "Edward",
+        "last_name": "Pennyworth",
+        "email": "edward.pennyworth@test.com",
+        "class": "6B",
+        "subject": "Computer Science"
+    },
+    {
+        "id": 142,
+        "first_name": "Wanda",
+        "last_name": "Harper",
+        "email": "wanda.harper@test.com",
+        "class": "10B",
+        "subject": "Geography"
+    },
+    {
+        "id": 143,
+        "first_name": "Zoe",
+        "last_name": "Strange",
+        "email": "zoe.strange@test.com",
+        "class": "11B",
+        "subject": "Biology"
+    },
+    {
+        "id": 144,
+        "first_name": "Maria",
+        "last_name": "Nelson",
+        "email": "maria.nelson@test.com",
+        "class": "11B",
+        "subject": "Data Structures"
+    },
+    {
+        "id": 145,
+        "first_name": "Harvey",
+        "last_name": "Wilson",
+        "email": "harvey.wilson@test.com",
+        "class": "12A",
+        "subject": "Environmental Science"
+    },
+    {
+        "id": 146,
+        "first_name": "Ivy",
+        "last_name": "Fury",
+        "email": "ivy.fury@test.com",
+        "class": "8A",
+        "subject": "Biology"
+    },
+    {
+        "id": 147,
+        "first_name": "Alice",
+        "last_name": "Prince",
+        "email": "alice.prince@test.com",
+        "class": "8A",
+        "subject": "Frontend Dev"
+    },
+    {
+        "id": 148,
+        "first_name": "Wanda",
+        "last_name": "Pennyworth",
+        "email": "wanda.pennyworth@test.com",
+        "class": "9B",
+        "subject": "English Literature"
+    },
+    {
+        "id": 149,
+        "first_name": "Scott",
+        "last_name": "Cobblepot",
+        "email": "scott.cobblepot@test.com",
+        "class": "11B",
+        "subject": "Mobile App Dev"
+    }
+]

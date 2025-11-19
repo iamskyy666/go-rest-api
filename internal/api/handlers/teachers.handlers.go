@@ -12,103 +12,94 @@ import (
 	"github.com/iamskyy111/go-rest-api/internal/repositories/sqlconnect"
 )
 
-var teachers = make(map[int]models.Teacher)
-// var mutex = &sync.Mutex{}
-// var nextID = 1
-
-// Initialize some/dummy data 🔵
-// func init(){
-// 		teachers[nextID] = models.Teacher{
-// 		ID: nextID,
-// 		FirstName: "John",
-// 		LastName: "Doe",
-// 		Class: "9A",
-// 		Subject: "Math",
-// 	}
-// 	nextID++
-// 		teachers[nextID] = models.Teacher{
-// 		ID: nextID,
-// 		FirstName: "Jane",
-// 		LastName: "Smith",
-// 		Class: "10A",
-// 		Subject: "English Lit.",
-// 	}
-// 	nextID++
-// 		teachers[nextID] = models.Teacher{
-// 		ID: nextID,
-// 		FirstName: "Jane",
-// 		LastName: "Doe",
-// 		Class: "11A",
-// 		Subject: "Geography",
-// 	}
-// 	nextID++
-// }
-
-// ☑️ GET single teacher based on ID
-func GetTeacherHandler(w http.ResponseWriter, r *http.Request){
-	// Connect to DB
-	db,err:=sqlconnect.ConnectDB()
+//! 1️⃣☑️ GET/FETCH teacher(s)
+func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
+	db, err := sqlconnect.ConnectDB()
 	if err != nil {
-		http.Error(w, "ERROR  connecting to DATABASE ⚠️",http.StatusInternalServerError)
+		http.Error(w, "ERROR connecting to DATABASE ⚠️", http.StatusInternalServerError)
 		return
 	}
+	defer db.Close()
 
-	defer db.Close() // Don't forget to close the db.
+	path := strings.TrimPrefix(r.URL.Path, "/teachers/")
+	idStr := strings.TrimSuffix(path, "/")
 
-	path := strings.TrimPrefix(r.URL.Path,"/teachers/")
-	idStr:=strings.TrimSuffix(path,"/")
+	// If no ID: GET ALL TEACHERS
+	if idStr == "" {
 
-	fmt.Println(idStr)
+		firstName := r.URL.Query().Get("first_name")
+		lastName := r.URL.Query().Get("last_name")
 
-	if idStr==""{
-	firstName:= r.URL.Query().Get("first_name")
-	lastName:= r.URL.Query().Get("last_name")
-	teacherList:= make([]models.Teacher,0,len(teachers))
-	for _, teacher:= range teachers{
-		if (firstName == "" || teacher.FirstName == firstName) && (lastName == "" || teacher.LastName == lastName){
-			teacherList = append(teacherList, teacher)
+		qry := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE 1=1"
+		var args []any
+
+		if firstName != "" {
+			qry += " AND first_name = ?"
+			args = append(args, firstName)
 		}
-	}
-	
 
-	resp:= struct{
-		Status string `json:"status"`
-		Count int `json:"count"`
-		Data []models.Teacher `json:"data"`
-	}{
-		Status: "success",
-		Count: len(teacherList),
-		Data: teacherList,
+		if lastName != "" {
+			qry += " AND last_name = ?"
+			args = append(args, lastName)
+		}
+
+		rows, err := db.Query(qry, args...)
+		if err != nil {
+			http.Error(w, "DATABASE-QUERY Error! ⚠️", http.StatusInternalServerError)
+			return
+		}
+		defer rows.Close()
+
+		teacherList := make([]models.Teacher, 0)
+		for rows.Next() {
+			var t models.Teacher
+			err := rows.Scan(&t.ID, &t.FirstName, &t.LastName, &t.Email, &t.Class, &t.Subject)
+			if err != nil {
+				http.Error(w, "ERROR scanning DB-results! ⚠️", http.StatusInternalServerError)
+				return
+			}
+			teacherList = append(teacherList, t)
+		}
+
+		resp := struct {
+			Status string            `json:"status"`
+			Count  int               `json:"count"`
+			Data   []models.Teacher  `json:"data"`
+		}{
+			Status: "success",
+			Count:  len(teacherList),
+			Data:   teacherList,
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+		return   // ← CRUCIAL FIX
 	}
 
-	// send the resp. in JSON{}
-	w.Header().Set("Content-Type","application/json")
-	json.NewEncoder(w).Encode(resp)
-}
-	// Handle Path Param
-	id,err:= strconv.Atoi(idStr)
-	if err!=nil{
-		fmt.Println("⚠️ERROR:",err)
+	// SINGLE TEACHER ======================================
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid ID format", http.StatusBadRequest)
 		return
 	}
-	// teacher,exists := teachers[id]
-	// if !exists{
-	// 	http.Error(w, "⚠️Teacher Not Found!",http.StatusNotFound)
-	// 	return
-	// }
+
 	var teacher models.Teacher
-	err=db.QueryRow("SELECT id, first_name, last_name,email, class, subject FROM teachers WHERE id=?",id).Scan(&teacher.ID, &teacher.FirstName, &teacher.LastName, &teacher.Email, &teacher.Class, &teacher.Subject)
+	err = db.QueryRow("SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE id = ?", id).
+		Scan(&teacher.ID, &teacher.FirstName, &teacher.LastName, &teacher.Email, &teacher.Class, &teacher.Subject)
+
 	if err == sql.ErrNoRows {
-		http.Error(w, "Teacher Not Found! ⚠️",http.StatusNotFound)
+		http.Error(w, "Teacher Not Found! ⚠️", http.StatusNotFound)
 		return
-	}else if err!=nil{
-		http.Error(w, "DB Query Error! ⚠️",http.StatusInternalServerError)
+	} else if err != nil {
+		http.Error(w, "DB Query Error! ⚠️", http.StatusInternalServerError)
+		return
 	}
-	w.Header().Set("Content-Type","application/json")
+
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(teacher)
 }
 
-// ☑️ ADD/POST Teacher(s)
+//! 2️⃣☑️ ADD/POST Teacher(s)
 func AddTeacherHandler(w http.ResponseWriter, r *http.Request){
 	// Connect to DB
 	db,err:=sqlconnect.ConnectDB()
@@ -163,6 +154,9 @@ func AddTeacherHandler(w http.ResponseWriter, r *http.Request){
 	json.NewEncoder(w).Encode(resp)
 }
 
+
+
+// Handler
 func TeachersHandler(w http.ResponseWriter, r *http.Request){
 		switch r.Method {
 				case http.MethodGet:
