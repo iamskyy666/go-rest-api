@@ -12,6 +12,24 @@ import (
 	"github.com/iamskyy111/go-rest-api/internal/repositories/sqlconnect"
 )
 
+// small sorting-utils f(x)
+func IsValidSortOrder(order string)bool{
+	return order=="asc" || order=="desc"
+}
+
+func IsValidSortField(field string)bool{
+	//💡 Map[][] is faster than a []slice or an []array
+	validFields:=map[string]bool{
+		"first_name":true,
+		"last_name":true,
+		"email":true,
+		"class":true,
+		"subject":true,
+	}
+	return validFields[field]
+}
+
+
 //! 1️⃣☑️ GET/FETCH teacher(s)
 func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
 	db, err := sqlconnect.ConnectDB()
@@ -34,6 +52,9 @@ func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 		//! Advanced filtering f(x)
 		qry, args = AddFilters(r, qry, args)
+
+		//! Advanced Sorting f(x)
+		qry = AddSorting(r, qry)
 
 		rows, err := db.Query(qry, args...)
 		if err != nil {
@@ -89,6 +110,32 @@ func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(teacher)
+}
+
+//! Advanced Sorting Technique
+func AddSorting(r *http.Request, qry string) string {
+	sortParams := r.URL.Query()["sortby"]
+
+	// if params are not empty, then..
+	if len(sortParams) > 0 {
+		qry += " ORDER BY"
+
+		for i, param := range sortParams {
+			parts := strings.Split(param, ":")
+			if len(parts) != 2 {
+				continue
+			}
+			field, order := parts[0], parts[1]
+			if !IsValidSortField(field) || !IsValidSortOrder(order) {
+				continue
+			}
+			if i > 0 {
+				qry += ","
+			}
+			qry += " " + field + " " + order
+		}
+	}
+	return qry
 }
 
 //! Advanced Filtering Technique
