@@ -26,22 +26,14 @@ func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 	// If no ID: GET ALL TEACHERS
 	if idStr == "" {
-
-		firstName := r.URL.Query().Get("first_name")
-		lastName := r.URL.Query().Get("last_name")
-
 		qry := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE 1=1"
 		var args []any
 
-		if firstName != "" {
-			qry += " AND first_name = ?"
-			args = append(args, firstName)
-		}
+		// firstName := r.URL.Query().Get("first_name")
+		// lastName := r.URL.Query().Get("last_name")
 
-		if lastName != "" {
-			qry += " AND last_name = ?"
-			args = append(args, lastName)
-		}
+		//! Advanced filtering f(x)
+		qry, args = AddFilters(r, qry, args)
 
 		rows, err := db.Query(qry, args...)
 		if err != nil {
@@ -97,6 +89,26 @@ func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(teacher)
+}
+
+//! Advanced Filtering Technique
+func AddFilters(r *http.Request, qry string, args []any) (string, []any) {
+	params := map[string]string{
+		"first_name": "first_name",
+		"last_name":  "last_name",
+		"email":      "email",
+		"class":      "class",
+		"subject":    "subject",
+	}
+
+	for param, dbField := range params {
+		val := r.URL.Query().Get(param)
+		if val != "" {
+			qry += " AND " + dbField + " = ?"
+			args = append(args, val)
+		}
+	}
+	return qry, args
 }
 
 //! 2️⃣☑️ ADD/POST Teacher(s)
