@@ -51,10 +51,10 @@ func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
 		// firstName := r.URL.Query().Get("first_name")
 		// lastName := r.URL.Query().Get("last_name")
 
-		//! Advanced filtering f(x)
+		// Advanced filtering f(x)
 		qry, args = AddFilters(r, qry, args)
 
-		//! Advanced Sorting f(x)
+		// Advanced Sorting f(x)
 		qry = AddSorting(r, qry)
 
 		rows, err := db.Query(qry, args...)
@@ -113,7 +113,7 @@ func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(teacher)
 }
 
-//! Advanced Sorting Technique
+// Advanced Sorting Technique
 func AddSorting(r *http.Request, qry string) string {
 	sortParams := r.URL.Query()["sortby"]
 
@@ -139,7 +139,7 @@ func AddSorting(r *http.Request, qry string) string {
 	return qry
 }
 
-//! Advanced Filtering Technique
+// Advanced Filtering Technique
 func AddFilters(r *http.Request, qry string, args []any) (string, []any) {
 	params := map[string]string{
 		"first_name": "first_name",
@@ -158,6 +158,7 @@ func AddFilters(r *http.Request, qry string, args []any) (string, []any) {
 	}
 	return qry, args
 }
+
 
 //! 2️⃣☑️ ADD/POST Teacher(s)
 func AddTeacherHandler(w http.ResponseWriter, r *http.Request){
@@ -272,11 +273,85 @@ func UpdateTeacherHandler(w http.ResponseWriter, r *http.Request){
 
 	w.Header().Set("Content-Type","application/json")
 	json.NewEncoder(w).Encode(updatedTeacher)
-
-
 }
 
-// Handler
+
+//! 4️⃣☑️ Partially-Edit/PATCH Teachers/id
+func PatchTeacherHandler(w http.ResponseWriter, r *http.Request){
+	// get id from the params and convert it to an 'int'
+	idStr:= strings.TrimPrefix(r.URL.Path,"/teachers/")
+	id,err:= strconv.Atoi(idStr)
+	if err != nil {
+		log.Println("ERROR:",err)
+		http.Error(w,"Invalid teacher-ID ⚠️",http.StatusBadRequest)
+		return
+	}
+
+	// decode JSON body into the model
+	var updates map[string]interface{}
+	err=json.NewDecoder(r.Body).Decode(&updates)
+	if err != nil {
+		log.Println("ERROR:",err)
+		http.Error(w,"Invalid request-payload ⚠️",http.StatusBadRequest)
+		return
+	}
+
+	// connect to the DB
+	db,err:=sqlconnect.ConnectDB()
+	if err != nil {
+		log.Println("ERROR:",err)
+		http.Error(w,"ERROR connecting to DB ⚠️",http.StatusInternalServerError)
+		return
+	}
+	defer db.Close() // always close() the db.
+
+	// execute the query to find the teacher
+	var existingTeacher models.Teacher
+	err=db.QueryRow("SELECT id,first_name,last_name,email,class,subject FROM teachers WHERE id = ?",id).Scan(&existingTeacher.ID, &existingTeacher.FirstName, &existingTeacher.LastName, &existingTeacher.Email, &existingTeacher.Class, &existingTeacher.Subject)
+
+	// Handle both type of errors upon Scan()
+	if err== sql.ErrNoRows{
+		log.Println("ERROR:",err)
+		http.Error(w,"Teacher Not Found ⚠️",http.StatusNotFound)
+		return
+	} else if err != nil {
+		log.Println("ERROR:",err)
+		http.Error(w,"Unable to retrieve data ⚠️",http.StatusInternalServerError)
+		return
+	}
+
+	// apply updates
+	for k,v:=range updates{
+		switch k {
+			case "first_name":
+			existingTeacher.FirstName = v.(string)
+			case "last_name":
+			existingTeacher.LastName = v.(string)	
+			case "email":
+			existingTeacher.Email = v.(string)	
+			case "class":
+			existingTeacher.Class = v.(string)	
+			case "subject":
+			existingTeacher.Subject = v.(string)
+		}
+	}
+
+	// send existingTeacher{} back to the DB for updation
+	// posting some data - Exec(), retrieving some data - Query()/QueryRow()
+	_,err=db.Exec("UPDATE teachers SET first_name = ?, last_name = ?, email = ?, class = ?, subject = ? WHERE id = ?",existingTeacher.FirstName, existingTeacher.LastName, existingTeacher.Email,existingTeacher.Class, existingTeacher.Subject, existingTeacher.ID)
+	if err!= nil{
+		log.Println("ERROR:",err)
+		http.Error(w,"ERROR updating teacher ⚠️",http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type","application/json")
+	json.NewEncoder(w).Encode(existingTeacher)
+}
+
+
+
+// Handlers
 func TeachersHandler(w http.ResponseWriter, r *http.Request){
 		switch r.Method {
 			case http.MethodGet:
@@ -289,8 +364,7 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request){
 			UpdateTeacherHandler(w,r)
 			return
 			case http.MethodPatch:
-			w.Write([]byte("Hello Patch method on Teachers-Route ✅"))
-			fmt.Println("Hello Patch method on Teachers-Route ✅")
+			PatchTeacherHandler(w,r)
 			return
 			case http.MethodDelete:
 			w.Write([]byte("Hello Delete method on Teachers-Route ✅"))
