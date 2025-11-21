@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -214,25 +215,88 @@ func AddTeacherHandler(w http.ResponseWriter, r *http.Request){
 }
 
 
+//! 3️⃣☑️ UPDATE/PUT Teachers/id
+//💡 PUT replaces the whole entry, leaving 1 blank will also result in a blank-entry in the db (unlike PATCH/partial update)
+func UpdateTeacherHandler(w http.ResponseWriter, r *http.Request){
+	// get id from the params and convert it to an 'int'
+	idStr:= strings.TrimPrefix(r.URL.Path,"/teachers/")
+	id,err:= strconv.Atoi(idStr)
+	if err != nil {
+		log.Println("ERROR:",err)
+		http.Error(w,"Invalid teacher-ID ⚠️",http.StatusBadRequest)
+		return
+	}
+
+	// decode JSON body into the model
+	var updatedTeacher models.Teacher
+	err=json.NewDecoder(r.Body).Decode(&updatedTeacher)
+	if err != nil {
+		log.Println("ERROR:",err)
+		http.Error(w,"Invalid request-payload ⚠️",http.StatusBadRequest)
+		return
+	}
+
+	// connect to the DB
+	db,err:=sqlconnect.ConnectDB()
+	if err != nil {
+		log.Println("ERROR:",err)
+		http.Error(w,"ERROR connecting to DB ⚠️",http.StatusInternalServerError)
+		return
+	}
+	defer db.Close() // always close() the db.
+
+	// extract existing info. from DB using the received id
+	var existingTeacher models.Teacher
+	err=db.QueryRow("SELECT id,first_name,last_name,email,class,subject FROM teachers WHERE id = ?",id).Scan(&existingTeacher.ID, &existingTeacher.FirstName, &existingTeacher.LastName, &existingTeacher.Email, &existingTeacher.Class, &existingTeacher.Subject)
+
+	// Handle both type of errors upon Scan()
+	if err== sql.ErrNoRows{
+		log.Println("ERROR:",err)
+		http.Error(w,"Teacher Not Found ⚠️",http.StatusNotFound)
+		return
+	} else if err != nil {
+		log.Println("ERROR:",err)
+		http.Error(w,"Unable to retrieve data ⚠️",http.StatusInternalServerError)
+		return
+	}
+
+	updatedTeacher.ID = existingTeacher.ID
+
+	// posting some data - Exec(), retrieving some data - Query()/QueryRow()
+	_,err=db.Exec("UPDATE teachers SET first_name = ?, last_name = ?, email = ?, class = ?, subject = ? WHERE id = ?",updatedTeacher.FirstName, updatedTeacher.LastName, updatedTeacher.Email,updatedTeacher.Class, updatedTeacher.Subject, updatedTeacher.ID)
+	if err!= nil{
+		log.Println("ERROR:",err)
+		http.Error(w,"ERROR updating teacher ⚠️",http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type","application/json")
+	json.NewEncoder(w).Encode(updatedTeacher)
+
+
+}
 
 // Handler
 func TeachersHandler(w http.ResponseWriter, r *http.Request){
 		switch r.Method {
-				case http.MethodGet:
-		GetTeacherHandler(w,r)	
+			case http.MethodGet:
+			GetTeacherHandler(w,r)	
 			return
-				case http.MethodPost:							
+			case http.MethodPost:							
 			AddTeacherHandler(w,r)
 			return
-				case http.MethodPatch:
+			case http.MethodPut:							
+			UpdateTeacherHandler(w,r)
+			return
+			case http.MethodPatch:
 			w.Write([]byte("Hello Patch method on Teachers-Route ✅"))
 			fmt.Println("Hello Patch method on Teachers-Route ✅")
 			return
-				case http.MethodDelete:
+			case http.MethodDelete:
 			w.Write([]byte("Hello Delete method on Teachers-Route ✅"))
 			fmt.Println("Hello Delete method on Teachers-Route ✅")
 			return	
-				default:
+			default:
 			w.Write([]byte("Hello UNKNOWN method on Teachers-Route!"))
 			fmt.Println("Hello UNKNOWN method on Teachers-Route !")
 			return	
