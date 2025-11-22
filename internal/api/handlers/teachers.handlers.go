@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -321,18 +322,35 @@ func PatchTeacherHandler(w http.ResponseWriter, r *http.Request){
 	}
 
 	// apply updates
+	// for k,v:=range updates{
+	// 	switch k {
+	// 		case "first_name":
+	// 		existingTeacher.FirstName = v.(string)
+	// 		case "last_name":
+	// 		existingTeacher.LastName = v.(string)	
+	// 		case "email":
+	// 		existingTeacher.Email = v.(string)	
+	// 		case "class":
+	// 		existingTeacher.Class = v.(string)	
+	// 		case "subject":
+	// 		existingTeacher.Subject = v.(string)
+	// 	}
+	// }
+
+	//! 💡 apply updates - refactored, using reflect pkg.
+	teacherVal:= reflect.ValueOf(&existingTeacher).Elem()
+	teacherType:= teacherVal.Type()
+
 	for k,v:=range updates{
-		switch k {
-			case "first_name":
-			existingTeacher.FirstName = v.(string)
-			case "last_name":
-			existingTeacher.LastName = v.(string)	
-			case "email":
-			existingTeacher.Email = v.(string)	
-			case "class":
-			existingTeacher.Class = v.(string)	
-			case "subject":
-			existingTeacher.Subject = v.(string)
+		for i:=0; i<teacherVal.NumField();i++{
+			field:=teacherType.Field(i)
+			field.Tag.Get("json")
+			if field.Tag.Get("json")==k+",omitempty" {
+				if teacherVal.Field(i).CanSet(){
+					fieldVal:=teacherVal.Field(i)
+					fieldVal.Set(reflect.ValueOf(v).Convert(teacherVal.Field(i).Type()))
+				}
+			}
 		}
 	}
 
