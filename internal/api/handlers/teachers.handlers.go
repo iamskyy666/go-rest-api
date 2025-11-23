@@ -431,9 +431,5 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request){
 			case http.MethodDelete:
 			DeleteTeacherHandler(w,r)
 			return	
-			default:
-			w.Write([]byte("Hello UNKNOWN method on Teachers-Route! ⚠️"))
-			fmt.Println("Hello UNKNOWN method on Teachers-Route !")
-			return	
 		}
 	}	
