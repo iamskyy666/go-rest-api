@@ -31,11 +31,57 @@ func IsValidSortField(field string)bool{
 	return validFields[field]
 }
 
+// Advanced Sorting Technique (util fx)
+func AddSorting(r *http.Request, qry string) string {
+	sortParams := r.URL.Query()["sortby"]
+
+	// if params are not empty, then..
+	if len(sortParams) > 0 {
+		qry += " ORDER BY"
+
+		for i, param := range sortParams {
+			parts := strings.Split(param, ":")
+			if len(parts) != 2 {
+				continue
+			}
+			field, order := parts[0], parts[1]
+			if !IsValidSortField(field) || !IsValidSortOrder(order) {
+				continue
+			}
+			if i > 0 {
+				qry += ","
+			}
+			qry += " " + field + " " + order
+		}
+	}
+	return qry
+}
+
+// Advanced Filtering Technique (util fx)
+func AddFilters(r *http.Request, qry string, args []any) (string, []any) {
+	params := map[string]string{
+		"first_name": "first_name",
+		"last_name":  "last_name",
+		"email":      "email",
+		"class":      "class",
+		"subject":    "subject",
+	}
+
+	for param, dbField := range params {
+		val := r.URL.Query().Get(param)
+		if val != "" {
+			qry += " AND " + dbField + " = ?"
+			args = append(args, val)
+		}
+	}
+	return qry, args
+}
+
 // 💡 All Ops. apart from GET requires db.Exec()
 
-
+// CRUD ⭐
 //! 1️⃣☑️ GET/FETCH teacher(s)
-func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
+func GetTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	db, err := sqlconnect.ConnectDB()
 	if err != nil {
 		http.Error(w, "ERROR connecting to DATABASE ⚠️", http.StatusInternalServerError)
@@ -43,11 +89,6 @@ func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer db.Close()
 
-	path := strings.TrimPrefix(r.URL.Path, "/teachers/")
-	idStr := strings.TrimSuffix(path, "/")
-
-	// If no ID: GET ALL TEACHERS
-	if idStr == "" {
 		qry := "SELECT id, first_name, last_name, email, class, subject FROM teachers WHERE 1=1"
 		var args []any
 
@@ -90,8 +131,18 @@ func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
-		return   // ← CRUCIAL FIX
+}
+
+//! 2️⃣☑️ GET/FETCH single-teacher /id
+func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
+	db, err := sqlconnect.ConnectDB()
+	if err != nil {
+		http.Error(w, "ERROR connecting to DATABASE ⚠️", http.StatusInternalServerError)
+		return
 	}
+	defer db.Close()
+
+	idStr := r.PathValue("id")
 
 	// SINGLE TEACHER ======================================
 	id, err := strconv.Atoi(idStr)
@@ -116,54 +167,8 @@ func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(teacher)
 }
 
-// Advanced Sorting Technique
-func AddSorting(r *http.Request, qry string) string {
-	sortParams := r.URL.Query()["sortby"]
 
-	// if params are not empty, then..
-	if len(sortParams) > 0 {
-		qry += " ORDER BY"
-
-		for i, param := range sortParams {
-			parts := strings.Split(param, ":")
-			if len(parts) != 2 {
-				continue
-			}
-			field, order := parts[0], parts[1]
-			if !IsValidSortField(field) || !IsValidSortOrder(order) {
-				continue
-			}
-			if i > 0 {
-				qry += ","
-			}
-			qry += " " + field + " " + order
-		}
-	}
-	return qry
-}
-
-// Advanced Filtering Technique
-func AddFilters(r *http.Request, qry string, args []any) (string, []any) {
-	params := map[string]string{
-		"first_name": "first_name",
-		"last_name":  "last_name",
-		"email":      "email",
-		"class":      "class",
-		"subject":    "subject",
-	}
-
-	for param, dbField := range params {
-		val := r.URL.Query().Get(param)
-		if val != "" {
-			qry += " AND " + dbField + " = ?"
-			args = append(args, val)
-		}
-	}
-	return qry, args
-}
-
-
-//! 2️⃣☑️ ADD/POST Teacher(s)
+//! 3️⃣☑️ ADD/POST Teacher(s)
 func AddTeacherHandler(w http.ResponseWriter, r *http.Request){
 	// Connect to DB
 	db,err:=sqlconnect.ConnectDB()
@@ -409,27 +414,4 @@ func DeleteTeacherHandler(w http.ResponseWriter, r *http.Request){
 	}
 
 	json.NewEncoder(w).Encode(response)
-}
-
-
-
-// Handlers
-func TeachersHandler(w http.ResponseWriter, r *http.Request){
-		switch r.Method {
-			case http.MethodGet:
-			GetTeacherHandler(w,r)	
-			return
-			case http.MethodPost:							
-			AddTeacherHandler(w,r)
-			return
-			case http.MethodPut:							
-			UpdateTeacherHandler(w,r)
-			return
-			case http.MethodPatch:
-			PatchTeacherHandler(w,r)
-			return
-			case http.MethodDelete:
-			DeleteTeacherHandler(w,r)
-			return	
-		}
-	}	
+}	
