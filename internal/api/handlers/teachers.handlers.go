@@ -31,6 +31,8 @@ func IsValidSortField(field string)bool{
 	return validFields[field]
 }
 
+// 💡 All Ops. apart from GET requires db.Exec()
+
 
 //! 1️⃣☑️ GET/FETCH teacher(s)
 func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
@@ -321,22 +323,6 @@ func PatchTeacherHandler(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	// apply updates
-	// for k,v:=range updates{
-	// 	switch k {
-	// 		case "first_name":
-	// 		existingTeacher.FirstName = v.(string)
-	// 		case "last_name":
-	// 		existingTeacher.LastName = v.(string)	
-	// 		case "email":
-	// 		existingTeacher.Email = v.(string)	
-	// 		case "class":
-	// 		existingTeacher.Class = v.(string)	
-	// 		case "subject":
-	// 		existingTeacher.Subject = v.(string)
-	// 	}
-	// }
-
 	//! 💡 apply updates - refactored, using reflect pkg.
 	teacherVal:= reflect.ValueOf(&existingTeacher).Elem()
 	teacherType:= teacherVal.Type()
@@ -368,6 +354,64 @@ func PatchTeacherHandler(w http.ResponseWriter, r *http.Request){
 }
 
 
+//! 5️⃣☑️ DELETE Teachers/id
+func DeleteTeacherHandler(w http.ResponseWriter, r *http.Request){
+	// extract id from the params and convert it to an 'int'
+	idStr:= strings.TrimPrefix(r.URL.Path,"/teachers/")
+	id,err:= strconv.Atoi(idStr)
+	if err != nil {
+		log.Println("ERROR:",err)
+		http.Error(w,"Invalid teacher-ID ⚠️",http.StatusBadRequest)
+		return
+	}
+
+	// connect to the DB
+	db,err:=sqlconnect.ConnectDB()
+	if err != nil {
+		log.Println("ERROR:",err)
+		http.Error(w,"ERROR connecting to DB ⚠️",http.StatusInternalServerError)
+		return
+	}
+	defer db.Close() // always close() the db.
+
+	// res/result - confirmation
+	res,err:=db.Exec("DELETE FROM teachers WHERE id = ?",id)
+	if err != nil {
+		log.Println("ERROR:",err)
+		http.Error(w,"ERROR deleting teacher ⚠️",http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println(res.RowsAffected()) // for our info.
+	rowsAffected,err:= res.RowsAffected()
+	if err != nil {
+		log.Println("ERROR:",err)
+		http.Error(w,"ERROR retrieving deleted-teacher ⚠️",http.StatusInternalServerError)
+		return
+	}
+
+	if rowsAffected == 0{
+		http.Error(w,"ERROR retrieving deleted-teacher ⚠️",http.StatusNotFound)
+		return
+	}
+
+	// no-response if delete is successful
+	// w.WriteHeader(http.StatusNoContent)
+
+	// Alternatively, response-body (better approach!)
+	w.Header().Set("Content-Type","application/json")
+	response:=struct{
+		Status string `json:"status"`
+		ID int `json:"id"`
+	}{
+		Status: "Teacher successfully DELETED ✅",
+		ID: id,
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
+
 
 // Handlers
 func TeachersHandler(w http.ResponseWriter, r *http.Request){
@@ -385,11 +429,10 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request){
 			PatchTeacherHandler(w,r)
 			return
 			case http.MethodDelete:
-			w.Write([]byte("Hello Delete method on Teachers-Route ✅"))
-			fmt.Println("Hello Delete method on Teachers-Route ✅")
+			DeleteTeacherHandler(w,r)
 			return	
 			default:
-			w.Write([]byte("Hello UNKNOWN method on Teachers-Route!"))
+			w.Write([]byte("Hello UNKNOWN method on Teachers-Route! ⚠️"))
 			fmt.Println("Hello UNKNOWN method on Teachers-Route !")
 			return	
 		}
