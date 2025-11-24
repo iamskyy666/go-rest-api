@@ -11,11 +11,11 @@ mux:= http.NewServeMux()
 
 mux.HandleFunc("/", handlers.RootHandler )
 
-// Teachers Handlers()
+//! Teachers Handlers()
 mux.HandleFunc("GET /teachers/", handlers.GetTeachersHandler)
 mux.HandleFunc("POST /teachers/", handlers.AddTeacherHandler)
 mux.HandleFunc("PUT /teachers/", handlers.UpdateTeacherHandler)
-mux.HandleFunc("PATCH /teachers/", handlers.PatchTeacherHandler)
+mux.HandleFunc("PATCH /teachers/", handlers.PatchTeachersHandler)
 mux.HandleFunc("DELETE /teachers/", handlers.DeleteTeacherHandler)
 
 mux.HandleFunc("GET /teachers/{id}", handlers.GetTeacherHandler)
