@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -19,6 +18,7 @@ func GetTeachersHandler(w http.ResponseWriter, r *http.Request) {
 		var teachers []models.Teacher
 		teachers, err := sqlconnect.GetTeachersDbHandler(teachers,r) // db ops.
 		if err!=nil{
+				http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -51,7 +51,7 @@ func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 	teacher, err := sqlconnect.GetTeacherDbHandler(id)
 	if err!=nil {
-		fmt.Println("ERROR:",err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -61,7 +61,7 @@ func GetTeacherHandler(w http.ResponseWriter, r *http.Request) {
 
 
 //! 3️⃣☑️ ADD/POST Teacher(s)
-func AddTeacherHandler(w http.ResponseWriter, r *http.Request){
+func AddTeachersHandler(w http.ResponseWriter, r *http.Request){
 
 	var newTeachers []models.Teacher
 	err:=json.NewDecoder(r.Body).Decode(&newTeachers) // we can add 1 or multiple values in a list
@@ -73,7 +73,7 @@ func AddTeacherHandler(w http.ResponseWriter, r *http.Request){
 	// Connect to DB
 	addedTeachers, err := sqlconnect.AddTeachersDbHandler(newTeachers)
 	if err!=nil {
-		fmt.Println("ERROR:",err)
+		http.Error(w,err.Error(),http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type","application/json")
@@ -98,7 +98,6 @@ func UpdateTeacherHandler(w http.ResponseWriter, r *http.Request){
 	idStr:= r.PathValue("id")
 	id,err:= strconv.Atoi(idStr)
 	if err != nil {
-		log.Println("ERROR:",err)
 		http.Error(w,"Invalid teacher-ID ⚠️",http.StatusBadRequest)
 		return
 	}
@@ -107,7 +106,6 @@ func UpdateTeacherHandler(w http.ResponseWriter, r *http.Request){
 	var updatedTeacher models.Teacher
 	err=json.NewDecoder(r.Body).Decode(&updatedTeacher)
 	if err != nil {
-		log.Println("ERROR:",err)
 		http.Error(w,"Invalid request-payload ⚠️",http.StatusBadRequest)
 		return
 	}
@@ -116,6 +114,7 @@ func UpdateTeacherHandler(w http.ResponseWriter, r *http.Request){
 	updatedTeacherFromDb, err := sqlconnect.UpdateTeachersDbHandler(id,updatedTeacher)
 	if err!=nil {
 		log.Println(err)
+		http.Error(w,err.Error(),http.StatusInternalServerError)
 		return
 	}
 
@@ -146,7 +145,7 @@ func PatchTeacherHandler(w http.ResponseWriter, r *http.Request){
 	// connect to the DB
 	updatedteacher, err := sqlconnect.PatchSingleTeacherDbOps(id, updates)
 	if err!=nil {
-		log.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -159,7 +158,6 @@ func PatchTeachersHandler(w http.ResponseWriter, r *http.Request){
 	var updates []map[string]any
 	err:=json.NewDecoder(r.Body).Decode(&updates)
 	if err != nil {
-		log.Println("ERROR:",err)
 		http.Error(w,"ERROR: Invalid request-payload ⚠️",http.StatusBadRequest)
 		return
 	}
@@ -167,7 +165,7 @@ func PatchTeachersHandler(w http.ResponseWriter, r *http.Request){
 	// connect to the DB
 	err = sqlconnect.PatchTeachersDbHandler(updates)
 	if err!=nil {
-		log.Println(err)
+		http.Error(w,err.Error(),http.StatusInternalServerError)
 		return
 	}
 
@@ -181,7 +179,6 @@ func DeleteTeacherHandler(w http.ResponseWriter, r *http.Request){
 	idStr:= r.PathValue("id")
 	id,err:= strconv.Atoi(idStr)
 	if err != nil {
-		log.Println("ERROR:",err)
 		http.Error(w,"Invalid teacher-ID ⚠️",http.StatusBadRequest)
 		return
 	}
@@ -189,7 +186,7 @@ func DeleteTeacherHandler(w http.ResponseWriter, r *http.Request){
 	// connect to the DB
 	err = sqlconnect.DeleteSingleTeacherDbHandler(id)
 	if err!=nil {
-		log.Println(err)
+		http.Error(w,err.Error(),http.StatusBadRequest)
 		return
 	}
 
@@ -215,7 +212,6 @@ func DeleteTeacherHandler(w http.ResponseWriter, r *http.Request){
 	var ids []int
 	err:=json.NewDecoder(r.Body).Decode(&ids)
 	if err != nil {
-		log.Println("ERROR:",err)
 		http.Error(w,"ERROR: Invalid request-payload ⚠️",http.StatusBadRequest)
 		return
 	}
@@ -223,7 +219,7 @@ func DeleteTeacherHandler(w http.ResponseWriter, r *http.Request){
 	// connect to the DB
 	deletedIds, err := sqlconnect.DeleteTeachersDbHandler(ids)
 	if err!=nil {
-		log.Println("ERROR:",err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -236,7 +232,6 @@ func DeleteTeacherHandler(w http.ResponseWriter, r *http.Request){
 		Status: "Teachers Successfully Deleted ✅",
 		DeletedIDs: deletedIds,
 	}
-
 	json.NewEncoder(w).Encode(resp)
 }
 

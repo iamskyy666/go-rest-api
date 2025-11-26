@@ -13,7 +13,7 @@ mux.HandleFunc("/", handlers.RootHandler )
 
 //! Teachers Handlers()
 mux.HandleFunc("GET /teachers", handlers.GetTeachersHandler)
-mux.HandleFunc("POST /teachers", handlers.AddTeacherHandler)
+mux.HandleFunc("POST /teachers", handlers.AddTeachersHandler)
 mux.HandleFunc("PUT /teachers", handlers.UpdateTeacherHandler)
 mux.HandleFunc("PATCH /teachers", handlers.PatchTeachersHandler)
 mux.HandleFunc("DELETE /teachers", handlers.DeleteTeachersHandler)
