@@ -145,36 +145,70 @@ func GetTeacherDbHandler(id int) (models.Teacher, error) {
 func AddTeachersDbHandler(newTeachers []models.Teacher) ([]models.Teacher, error) {
 	db, err := ConnectDB()
 	if err != nil {
-		//http.Error(w, "ERROR  connecting to DATABASE ⚠️", http.StatusInternalServerError)
 		return nil, utils.ErrorHandler(err,  "ERROR  connecting to DATABASE ⚠️")
 	}
 
 	defer db.Close() // Don't forget to close the db.
 
-	stmt, err := db.Prepare("INSERT INTO teachers (first_name, last_name, email, class, subject) VALUES(?,?,?,?,?)")
+	//stmt, err := db.Prepare("INSERT INTO teachers (first_name, last_name, email, class, subject) VALUES(?,?,?,?,?)")
+	stmt, err := db.Prepare(GenerateInsertQry(models.Teacher{}))
 	if err != nil {
-		//http.Error(w, "ERROR preparing SQL Query ⚠️", http.StatusInternalServerError)
 		return nil, utils.ErrorHandler(err,  "ERROR preparing SQL Query ⚠️")
 	}
 	defer stmt.Close() // Don't forget to close the stmt.
 
 	addedTeachers := make([]models.Teacher, len(newTeachers))
 	for i, newTeacher := range newTeachers {
-		res, err := stmt.Exec(newTeacher.FirstName, newTeacher.LastName, newTeacher.Email, newTeacher.Class, newTeacher.Subject)
+		// res, err := stmt.Exec(newTeacher.FirstName, newTeacher.LastName, newTeacher.Email, newTeacher.Class, newTeacher.Subject)
+		values:= GetStructVals(newTeacher)
+		res, err := stmt.Exec(values...)
 		if err != nil {
-			//http.Error(w, "ERROR inserting DATA into DB", http.StatusInternalServerError)
 			fmt.Println("ERROR:", err)
 			return nil, utils.ErrorHandler(err,  "ERROR inserting DATA into DB⚠️")
 		}
 		lastId, err := res.LastInsertId()
 		if err != nil {
-			//http.Error(w, "ERROR getting last-inserted-id⚠️", http.StatusInternalServerError)
 			return nil, utils.ErrorHandler(err,  "ERROR getting last-inserted-id⚠️")
 		}
 		newTeacher.ID = int(lastId)
 		addedTeachers[i] = newTeacher
 	}
 	return addedTeachers, nil
+}
+
+func GenerateInsertQry(model any)string{
+	modelType:=reflect.TypeOf(model)
+	var columns, placeholders string
+	for i := 0; i < modelType.NumField(); i++ {
+		dbTag:=modelType.Field(i).Tag.Get("db")
+		fmt.Println("dbTag:",dbTag)
+		dbTag=strings.TrimSuffix(dbTag,",omitempty")
+		if dbTag!="" && dbTag!="id"{
+			// skip the ID field if it's auto-increment
+			if columns!=""{
+				columns+=", "
+				placeholders+=", "
+			}
+			columns+=dbTag
+			placeholders+="?"
+		}
+	}
+	fmt.Printf("INSERT INTO teachers (%s) VALUES (%s)\n",columns,placeholders)
+	return fmt.Sprintf("INSERT INTO teachers (%s) VALUES (%s)",columns,placeholders)
+}
+
+func GetStructVals(model any)[]any{
+	modelVal:=reflect.ValueOf(model)
+	modelType:=modelVal.Type()
+	vals:=[]any{}
+	for i := 0; i < modelType.NumField(); i++ {
+		dbTag:=modelType.Field(i).Tag.Get("db")
+		if dbTag !="" && dbTag!="id,omitempty"{
+			vals= append(vals,modelVal.Field(i).Interface())
+		}
+	}
+	log.Println("Values:",vals)
+	return vals
 }
 
 //! Update/PUT teacher Db ops.

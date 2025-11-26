@@ -11,7 +11,6 @@ import (
 )
 
 // 💡 All Ops. apart from GET requires db.Exec()
-
 // CRUD ⭐
 //! 1️⃣☑️ GET/FETCH teacher(s)
 func GetTeachersHandler(w http.ResponseWriter, r *http.Request) {
